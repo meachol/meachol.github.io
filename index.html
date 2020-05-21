@@ -6,12 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Meachol的博客</title>
+
+    <script src="jquery.min.js"></script>
 </head>
 <style>
     body {
-        text-align: center;
+        /* text-align: center; */
         font-size: 15pt;
-        background-image: url(imagesXpf/189.png);
+        background-image: url(imagesXpf/190.jpg);
         background-position: top left;
         background-size: 100%;
     }
@@ -23,6 +25,89 @@
     h3 {
         text-align: center;
     }
+
+    .box-head {
+
+        position: absolute;
+        top: 100px;
+        left: 50px;
+        /* left: 100px; */
+        height: 100px;
+
+    }
+
+    a {
+        color: #000;
+    }
+
+    .box-head li {
+
+        list-style: none;
+        color: black;
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+    .box-head li a {
+        color: black;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    /* .box-head li:hover {
+
+        background-color: cornsilk;
+
+        border-radius: 5px;
+
+    }
+
+    .box-head li:hover a {
+        color: orange;
+    } */
+
+
+
+
+
+    /* .box-body {
+        padding: 20px;
+        border: 1px solid lightgray;
+        border-bottom: 0;
+        border-right: 0;
+        position: absolute;
+        top: 200px;
+        left: 320px;
+    } */
+
+    .allaprt li {
+        list-style-type: none;
+    }
+
+    .allaprt li a {
+
+        text-decoration: none;
+    }
+
+    .allaprt li a:hover {
+        color: orange;
+        ;
+        font-weight: 600;
+    }
+
+    .allaprt ul {
+        /* display: none; */
+        padding: 20px;
+        border: 1px solid lightgray;
+        border-bottom: 0;
+        border-right: 0;
+        position: absolute;
+        top: 200px;
+        left: 320px;
+    }
+
+
+
 
     /* a {
         margin-left: 100pt;
@@ -43,20 +128,106 @@
     <br>
     <br>
     <br>
-    <br>
-    <br>
-    <a href="indexA6.html" target="_blank" style="text-decoration: none;">1，前端学习之html初步认识</a>
-    <br>
-    <a href="index6.html" class="part" style="text-align: center; text-decoration: none;">2， demo模拟</a> <br>
 
-    <a href="index8.html" target="_blank" class="part" style="text-align: center; text-decoration: none;">3， 微软 GitHub
-        发布
-        Android Beta 版，支持暗黑模式</a><br>
-    <a href="indexA3.html" target="_blank" class="part" style="text-align: center; text-decoration: none;">4，
-        多难兴邦----跟祖国一起打赢这场生化战</a><br>
-    <a href="indexM1.html" target="_blank" class="part"
-        style="text-align: center; text-decoration: none;">5，学成在线</a><br>
-    <p></p>
+    <div class="box-head">
+
+        <ul class="box-head-ul">
+            <li><a href="#">全部</a></li>
+            <li><a href="#">iOS</a></li>
+            <li><a href="#">前端</a></li>
+            <li><a href="#">随写</a></li>
+            <li><a href="#">我的</a></li>
+            <li><a href="#">关于</a></li>
+
+        </ul>
+
+    </div>
+    <div class="allaprt">
+        <ul class="box-body">
+            <li><a href="indexA6.html" target="_blank">1，前端学习之html初步认识</a></li>
+            <li><a href="index6.html" class="part">2， demo模拟</a></li>
+            <li><a href="index8.html" target="_blank" class="part">3， 微软 GitHub 发布 Android Beta 版，支持暗黑模式</a></li>
+            <li><a href="indexA3.html" target="_blank" class="part">4，多难兴邦----跟祖国一起打赢这场生化战</a></li>
+            <li><a href="indexM1.html" target="_blank" class="part">5，学成在线</a></li>
+        </ul>
+
+
+
+        <ul class="box-ios">
+            <li><a href="indexA6.html" target="_blank">1，还没想好写什么ios</a></li>
+
+        </ul>
+
+        <ul class="box-qianduan">
+            <li><a href="indexA6.html" target="_blank">1，还没想好写什么qianduan</a></li>
+
+        </ul>
+
+        <ul class="box-suixie">
+            <li><a href="indexA6.html" target="_blank">1，还没想好写什么suixie</a></li>
+
+        </ul>
+        <ul class="box-wode">
+            <li><a href="indexA6.html" target="_blank">1，还没想好写什么wode</a></li>
+
+        </ul>
+        <ul class="box-about">
+            <li><a href="indexA6.html" target="_blank">1，还没想好写什么about</a></li>
+        </ul>
+
+    </div>
+
+    <script>
+
+        $(".box-head li").eq(0).css({
+
+            backgroundColor: "cornsilk",
+
+            borderRadius: "5px"
+
+        });
+
+        $(".allaprt").children().eq(0).show().siblings("ul").hide();;
+
+
+        $(".box-head li").mouseover(function () {
+            console.log("over");
+
+
+            $(this).children().eq(0).css("color", "orange");
+
+
+        });
+
+        $(".box-head li").mouseleave(function () {
+            console.log("leave");
+            $(this).children().eq(0).css("color", "black");
+
+        });
+
+        $(".box-head li").click(function () {
+            // console.log($(this).index());
+            var index = $(this).index();
+            $(".allaprt").children().eq(index).show().siblings("ul").hide();
+            $(this).css({
+
+                backgroundColor: "cornsilk",
+
+                borderRadius: "5px"
+
+            }).siblings("li").css({
+                backgroundColor: "transparent",
+
+                borderRadius: "0"
+            });
+
+            $(this).children().eq(0).css("color", "orange");
+            $(this).siblings("li").children().eq(0).css("color", "black");
+        });
+
+
+
+    </script>
 </body>
 
 </html>
