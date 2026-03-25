@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>圆环旋转动画OC语言实现 - Meachol的博客</title>
+    <style>
+        body {
+            font-family: Microsoft YaHei, PingFang SC, sans-serif;
+            font-size: 16px;
+            color: #333;
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 20px 24px 60px;
+            line-height: 1.8;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 26px;
+            margin-bottom: 6px;
+        }
+
+        h2 {
+            font-size: 20px;
+            border-left: 4px solid #4A90E2;
+            padding-left: 10px;
+            margin-top: 36px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+
+        p {
+            text-indent: 2em;
+            margin: 10px 0;
+        }
+
+        /* ---- live demo ---- */
+        .demo-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+        }
+
+        .ring-demo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 8px solid transparent;
+            border-top-color: #4A90E2;
+            border-right-color: #4A90E2;
+            border-bottom-color: #4A90E2;
+            animation: ring-spin 1s linear infinite;
+        }
+
+        @keyframes ring-spin {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+
+        /* ---- code blocks ---- */
+        .code-block {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            border-radius: 8px;
+            padding: 20px 22px;
+            overflow-x: auto;
+            font-family: Menlo, Consolas, "Courier New", monospace;
+            font-size: 13.5px;
+            line-height: 1.65;
+            margin: 16px 0;
+        }
+
+        .kw  { color: #cba6f7; }   /* keywords */
+        .ty  { color: #89b4fa; }   /* types / class names */
+        .str { color: #a6e3a1; }   /* strings */
+        .num { color: #fab387; }   /* numbers */
+        .cm  { color: #6c7086; font-style: italic; } /* comments */
+        .mc  { color: #89dceb; }   /* method calls / selectors */
+
+        /* ---- navigation ---- */
+        .nav-bar {
+            margin-bottom: 20px;
+        }
+
+        .nav-bar a {
+            text-decoration: none;
+            color: #4A90E2;
+            font-size: 14px;
+        }
+
+        .nav-bar a:hover {
+            color: orange;
+        }
+
+        .author {
+            text-align: right;
+            color: #888;
+            margin-top: 50px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="nav-bar">
+        <a href="index.html">← 返回首页</a>
+    </div>
+
+    <h1>圆环旋转动画 OC 语言实现</h1>
+    <p class="subtitle">----------使用 CAShapeLayer + CABasicAnimation 实现圆环加载动画</p>
+
+    <h2>一、效果预览</h2>
+    <p>下面是最终实现的圆环旋转动画效果（网页模拟版）：</p>
+
+    <div class="demo-wrapper">
+        <div class="ring-demo"></div>
+    </div>
+
+    <p>圆弧绕中心点匀速旋转一圈，循环播放，常用于页面加载等待场景。</p>
+
+    <h2>二、实现思路</h2>
+    <p>在 iOS 开发中，圆环旋转动画通常有两种做法：</p>
+    <p>① 使用系统自带的 <code>UIActivityIndicatorView</code>，简单但样式固定；</p>
+    <p>② 使用 <code>CAShapeLayer</code> + <code>UIBezierPath</code> 绘制自定义圆弧，再配合 <code>CABasicAnimation</code> 做旋转动画，灵活可定制。</p>
+    <p>本文采用第②种方式，分三步完成：</p>
+    <p>1. 用 <code>UIBezierPath</code> 画出 3/4 圆弧路径；</p>
+    <p>2. 将路径赋给 <code>CAShapeLayer</code> 完成绘制；</p>
+    <p>3. 添加 <code>CABasicAnimation</code> 对 <code>transform.rotation.z</code> 做无限循环旋转。</p>
+
+    <h2>三、头文件 RingAnimationView.h</h2>
+
+    <div class="code-block"><span class="cm">// RingAnimationView.h</span>
+
+<span class="kw">#import</span> <span class="str">&lt;UIKit/UIKit.h&gt;</span>
+
+<span class="ty">NS_ASSUME_NONNULL_BEGIN</span>
+
+<span class="cm">/** 圆环旋转动画视图，支持自定义颜色、线宽和旋转速度 */</span>
+<span class="kw">@interface</span> <span class="ty">RingAnimationView</span> : <span class="ty">UIView</span>
+
+<span class="cm">/** 圆弧颜色，默认蓝色 */</span>
+<span class="kw">@property</span> (<span class="kw">nonatomic</span>, <span class="kw">strong</span>) <span class="ty">UIColor</span> *ringColor;
+
+<span class="cm">/** 线宽，默认 5.0 */</span>
+<span class="kw">@property</span> (<span class="kw">nonatomic</span>, <span class="kw">assign</span>) <span class="ty">CGFloat</span> lineWidth;
+
+<span class="cm">/** 旋转一圈所需时间（秒），默认 1.0 */</span>
+<span class="kw">@property</span> (<span class="kw">nonatomic</span>, <span class="kw">assign</span>) <span class="ty">CFTimeInterval</span> duration;
+
+<span class="cm">/** 开始旋转动画 */</span>
+- (<span class="kw">void</span>)<span class="mc">startAnimation</span>;
+
+<span class="cm">/** 停止旋转动画 */</span>
+- (<span class="kw">void</span>)<span class="mc">stopAnimation</span>;
+
+<span class="kw">@end</span>
+
+<span class="ty">NS_ASSUME_NONNULL_END</span></div>
+
+    <h2>四、实现文件 RingAnimationView.m</h2>
+
+    <div class="code-block"><span class="cm">// RingAnimationView.m</span>
+
+<span class="kw">#import</span> <span class="str">"RingAnimationView.h"</span>
+<span class="kw">#import</span> <span class="str">&lt;QuartzCore/QuartzCore.h&gt;</span>
+
+<span class="kw">static</span> <span class="ty">NSString</span> * <span class="kw">const</span> kRingRotationKey = <span class="str">@"kRingRotationKey"</span>;
+
+<span class="kw">@interface</span> <span class="ty">RingAnimationView</span> ()
+<span class="kw">@property</span> (<span class="kw">nonatomic</span>, <span class="kw">strong</span>) <span class="ty">CAShapeLayer</span> *ringLayer;
+<span class="kw">@end</span>
+
+<span class="kw">@implementation</span> <span class="ty">RingAnimationView</span>
+
+<span class="cm">// ----------------------------------------------------------------
+// MARK: - 初始化
+// ----------------------------------------------------------------</span>
+
+- (<span class="ty">instancetype</span>)<span class="mc">initWithFrame</span>:(<span class="ty">CGRect</span>)frame {
+    self = [<span class="kw">super</span> <span class="mc">initWithFrame</span>:frame];
+    <span class="kw">if</span> (self) {
+        [self <span class="mc">_setupDefaults</span>];
+        [self <span class="mc">_setupRingLayer</span>];
+    }
+    <span class="kw">return</span> self;
+}
+
+- (<span class="ty">instancetype</span>)<span class="mc">initWithCoder</span>:(<span class="ty">NSCoder</span> *)coder {
+    self = [<span class="kw">super</span> <span class="mc">initWithCoder</span>:coder];
+    <span class="kw">if</span> (self) {
+        [self <span class="mc">_setupDefaults</span>];
+        [self <span class="mc">_setupRingLayer</span>];
+    }
+    <span class="kw">return</span> self;
+}
+
+- (<span class="kw">void</span>)<span class="mc">_setupDefaults</span> {
+    _ringColor = [<span class="ty">UIColor</span> <span class="mc">systemBlueColor</span>];
+    _lineWidth  = <span class="num">5.0</span>;
+    _duration   = <span class="num">1.0</span>;
+    self.<span class="mc">backgroundColor</span> = [<span class="ty">UIColor</span> <span class="mc">clearColor</span>];
+}
+
+<span class="cm">// ----------------------------------------------------------------
+// MARK: - 图层搭建
+// ----------------------------------------------------------------</span>
+
+- (<span class="kw">void</span>)<span class="mc">_setupRingLayer</span> {
+    <span class="ty">CAShapeLayer</span> *ring = [<span class="ty">CAShapeLayer</span> <span class="mc">layer</span>];
+    ring.<span class="mc">fillColor</span>    = [<span class="ty">UIColor</span> <span class="mc">clearColor</span>].<span class="mc">CGColor</span>;
+    ring.<span class="mc">strokeColor</span>  = _ringColor.<span class="mc">CGColor</span>;
+    ring.<span class="mc">lineWidth</span>    = _lineWidth;
+    ring.<span class="mc">lineCap</span>      = kCALineCapRound;
+    ring.<span class="mc">strokeEnd</span>    = <span class="num">0.75</span>; <span class="cm">// 画 3/4 圆弧，留出缺口更有动感</span>
+    [self.<span class="mc">layer</span> <span class="mc">addSublayer</span>:ring];
+    self.<span class="mc">ringLayer</span> = ring;
+}
+
+- (<span class="kw">void</span>)<span class="mc">layoutSubviews</span> {
+    [<span class="kw">super</span> <span class="mc">layoutSubviews</span>];
+    <span class="cm">// 布局改变时同步更新路径</span>
+    self.<span class="mc">ringLayer</span>.<span class="mc">frame</span> = self.<span class="mc">bounds</span>;
+    self.<span class="mc">ringLayer</span>.<span class="mc">path</span>  = [self <span class="mc">_ringPath</span>].<span class="mc">CGPath</span>;
+}
+
+- (<span class="ty">UIBezierPath</span> *)<span class="mc">_ringPath</span> {
+    <span class="ty">CGPoint</span>  center = <span class="ty">CGPointMake</span>(<span class="ty">CGRectGetMidX</span>(self.<span class="mc">bounds</span>),
+                                    <span class="ty">CGRectGetMidY</span>(self.<span class="mc">bounds</span>));
+    <span class="ty">CGFloat</span>  radius = MIN(<span class="ty">CGRectGetWidth</span>(self.<span class="mc">bounds</span>),
+                           <span class="ty">CGRectGetHeight</span>(self.<span class="mc">bounds</span>)) / <span class="num">2.0</span>
+                       - _lineWidth / <span class="num">2.0</span>;
+    <span class="kw">return</span> [<span class="ty">UIBezierPath</span> <span class="mc">bezierPathWithArcCenter</span>:center
+                                               <span class="mc">radius</span>:radius
+                                           <span class="mc">startAngle</span>:<span class="num">0</span>
+                                             <span class="mc">endAngle</span>:M_PI * <span class="num">2</span>
+                                            <span class="mc">clockwise</span>:YES];
+}
+
+<span class="cm">// ----------------------------------------------------------------
+// MARK: - 属性变更同步到图层
+// ----------------------------------------------------------------</span>
+
+- (<span class="kw">void</span>)<span class="mc">setRingColor</span>:(<span class="ty">UIColor</span> *)ringColor {
+    _ringColor = ringColor;
+    self.<span class="mc">ringLayer</span>.<span class="mc">strokeColor</span> = ringColor.<span class="mc">CGColor</span>;
+}
+
+- (<span class="kw">void</span>)<span class="mc">setLineWidth</span>:(<span class="ty">CGFloat</span>)lineWidth {
+    _lineWidth = lineWidth;
+    self.<span class="mc">ringLayer</span>.<span class="mc">lineWidth</span> = lineWidth;
+    self.<span class="mc">ringLayer</span>.<span class="mc">path</span> = [self <span class="mc">_ringPath</span>].<span class="mc">CGPath</span>;
+}
+
+<span class="cm">// ----------------------------------------------------------------
+// MARK: - 动画控制
+// ----------------------------------------------------------------</span>
+
+- (<span class="kw">void</span>)<span class="mc">startAnimation</span> {
+    <span class="kw">if</span> ([self.<span class="mc">ringLayer</span> <span class="mc">animationForKey</span>:kRingRotationKey]) {
+        <span class="kw">return</span>; <span class="cm">// 已在动画中，避免重复添加</span>
+    }
+    <span class="ty">CABasicAnimation</span> *rotation =
+        [<span class="ty">CABasicAnimation</span> <span class="mc">animationWithKeyPath</span>:<span class="str">@"transform.rotation.z"</span>];
+    rotation.<span class="mc">fromValue</span>      = <span class="kw">@</span>(<span class="num">0</span>);
+    rotation.<span class="mc">toValue</span>        = <span class="kw">@</span>(M_PI * <span class="num">2</span>);
+    rotation.<span class="mc">duration</span>       = _duration;
+    rotation.<span class="mc">repeatCount</span>    = HUGE_VALF;  <span class="cm">// 无限循环</span>
+    rotation.<span class="mc">timingFunction</span> =
+        [<span class="ty">CAMediaTimingFunction</span> <span class="mc">functionWithName</span>:kCAMediaTimingFunctionLinear];
+
+    [self.<span class="mc">ringLayer</span> <span class="mc">addAnimation</span>:rotation <span class="mc">forKey</span>:kRingRotationKey];
+}
+
+- (<span class="kw">void</span>)<span class="mc">stopAnimation</span> {
+    [self.<span class="mc">ringLayer</span> <span class="mc">removeAnimationForKey</span>:kRingRotationKey];
+}
+
+<span class="kw">@end</span></div>
+
+    <h2>五、使用示例（ViewController.m）</h2>
+
+    <div class="code-block"><span class="kw">#import</span> <span class="str">"ViewController.h"</span>
+<span class="kw">#import</span> <span class="str">"RingAnimationView.h"</span>
+
+<span class="kw">@interface</span> <span class="ty">ViewController</span> ()
+<span class="kw">@property</span> (<span class="kw">nonatomic</span>, <span class="kw">strong</span>) <span class="ty">RingAnimationView</span> *ringView;
+<span class="kw">@end</span>
+
+<span class="kw">@implementation</span> <span class="ty">ViewController</span>
+
+- (<span class="kw">void</span>)<span class="mc">viewDidLoad</span> {
+    [<span class="kw">super</span> <span class="mc">viewDidLoad</span>];
+
+    <span class="cm">// 创建圆环视图，大小 100×100</span>
+    <span class="ty">CGRect</span> frame = <span class="ty">CGRectMake</span>(<span class="num">0</span>, <span class="num">0</span>, <span class="num">100</span>, <span class="num">100</span>);
+    self.<span class="mc">ringView</span> = [[<span class="ty">RingAnimationView</span> <span class="mc">alloc</span>] <span class="mc">initWithFrame</span>:frame];
+    self.<span class="mc">ringView</span>.<span class="mc">center</span>    = self.<span class="mc">view</span>.<span class="mc">center</span>;
+
+    <span class="cm">// 自定义样式</span>
+    self.<span class="mc">ringView</span>.<span class="mc">ringColor</span>  = [<span class="ty">UIColor</span> <span class="mc">systemBlueColor</span>];
+    self.<span class="mc">ringView</span>.<span class="mc">lineWidth</span>  = <span class="num">6.0</span>;
+    self.<span class="mc">ringView</span>.<span class="mc">duration</span>   = <span class="num">1.0</span>;  <span class="cm">// 1 秒转一圈</span>
+
+    [self.<span class="mc">view</span> <span class="mc">addSubview</span>:self.<span class="mc">ringView</span>];
+
+    <span class="cm">// 开始动画</span>
+    [self.<span class="mc">ringView</span> <span class="mc">startAnimation</span>];
+}
+
+- (<span class="kw">void</span>)<span class="mc">viewWillDisappear</span>:(<span class="ty">BOOL</span>)animated {
+    [<span class="kw">super</span> <span class="mc">viewWillDisappear</span>:animated];
+    [self.<span class="mc">ringView</span> <span class="mc">stopAnimation</span>];
+}
+
+<span class="kw">@end</span></div>
+
+    <h2>六、关键知识点说明</h2>
+    <p><strong>CAShapeLayer.strokeEnd</strong>：控制路径描边的终止位置，范围 0~1。设为 0.75 表示画出 3/4 圆弧，视觉上形成"缺口"，旋转时更有加载感。</p>
+    <p><strong>CABasicAnimation keyPath "transform.rotation.z"</strong>：对图层绕 Z 轴（屏幕法向轴）做旋转动画，fromValue=0，toValue=2π，即旋转一圈。</p>
+    <p><strong>repeatCount = HUGE_VALF</strong>：设置为浮点最大值，动画将无限重复；若需停止，调用 <code>removeAnimationForKey:</code> 即可。</p>
+    <p><strong>layoutSubviews 中更新路径</strong>：路径依赖视图尺寸，在 <code>layoutSubviews</code> 中同步更新，确保旋转自适应不同屏幕和自动布局场景。</p>
+
+    <p class="author">----------作者：meachol</p>
+
+</body>
+
+</html>
